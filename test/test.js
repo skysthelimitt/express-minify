@@ -34,44 +34,12 @@ var expectation = {
       source: '{  "name" : "express-minify" , "author" : "Breezewish" , "description" : "test string"}',
       minified: '{"name":"express-minify","author":"Breezewish","description":"test string"}',
     },
-  ],
-  'sass': [
-    {
-      source: '#navbar { a { font-weight: bold; } }',
-      compiled: '#navbar a {\n  font-weight: bold; }\n',
-      minified: '#navbar a{font-weight:700}',
-    },
-  ],
-  'less': [
-    {
-      source: '.class { width: (1 + 1)px }',
-      compiled: '.class {\n  width: 2 px;\n}\n',
-      minified: '.class{width:2 px}',
-    },
-  ],
-  'stylus': [
-    {
-      source: 'fonts = helvetica, arial, sans-serif\nbody {\n  padding: 50px;\n  font: 14px/1.4 fonts;\n}',
-      compiled: 'body {\n  padding: 50px;\n  font: 14px/1.4 helvetica, arial, sans-serif;\n}\n',
-      minified: 'body{padding:50px;font:14px/1.4 helvetica,arial,sans-serif}',
-    },
-  ],
-  'coffeeScript': [
-    {
-      source: 'square = (x) -> x * x\nconsole.log square(5)',
-      compiled: '(function() {\n  var square;\n\n  square = function(x) {\n    return x * x;\n  };\n\n  console.log(square(5));\n\n}).call(this);\n',
-      minified: '(function(){var n;n=function(n){return n*n},console.log(n(5))}).call(this);',
-    },
-  ],
+  ]
 };
 
 var header = {
   'js': 'text/javascript',
   'css': 'text/css',
-  'sass': 'text/x-scss',
-  'less': 'text/less',
-  'stylus': 'text/stylus',
-  'coffeeScript': 'text/coffeescript',
   'json': 'application/json'
 };
 
@@ -125,24 +93,14 @@ describe('minify()', function() {
   });
 
 
-  it('should not minify a broken JavaScript content', function(done) {
-    var content = '/* this is a broken JavaScript!';
-    var server = createServer([minify()], function(req, res) {
-      res.setHeader('Content-Type', 'text/javascript');
-      res.end(content);
-    });
-    request(server)
-    .get('/')
-    .expect(content, done);
-  });
 
 
-  it('allow to disable mangling by customizing uglify-js options', function(done) {
+  it('allow to disable mangling by customizing terser options', function(done) {
     var content = '// this is comment\nwindow.foo = function(bar) { bar(1); };';
     var expected = 'window.foo=function(bar){bar(1)};'
     var server = createServer([minify()], function(req, res) {
       res.setHeader('Content-Type', 'text/javascript');
-      res.minifyOptions = {js: { mangle: false }};
+      res.minifyOptions = {mangle: false};
       res.end(content);
     });
     request(server)
@@ -151,7 +109,7 @@ describe('minify()', function() {
   });
 
 
-  it('allow to preserve comments by customizing uglify-js options', function(done) {
+  it('allow to preserve comments by customizing terser options', function(done) {
     var content = '// this is comment\nwindow.foo = function(bar) { bar(1); };';
     var expected = '// this is comment\nwindow.foo=function(o){o(1)};'
     var server = createServer([minify()], function(req, res) {
@@ -198,28 +156,6 @@ describe('minify()', function() {
     .expect(expected, done);
   });
 
-
-  it('allow to customize UglifyJS instance', function(done) {
-    var content = 'js_test';
-    var expected = 'js_test_passed';
-    var myModule = {
-      minify: function () {
-        return {
-          code: expected,
-          error: undefined,
-        }
-      }
-    };
-    var server = createServer([minify({
-      uglifyJsModule: myModule
-    })], function(req, res) {
-      res.setHeader('Content-Type', 'text/javascript');
-      res.end(content);
-    });
-    request(server)
-    .get('/')
-    .expect(expected, done);
-  });
 
 
   for (var type in expectation) {

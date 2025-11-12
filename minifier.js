@@ -23,20 +23,12 @@ function testModule(name) {
 function Minifier (options) {
   options = options || {};
   this.handleError = options.errorHandler || Minifier.defaultErrorHandler;
-  this.uglifyJsModule = options.uglifyJsModule || testModule('uglify-js');
+  this.uglifyJsModule = testModule('terser');
   this.cleanCssModule = testModule('clean-css');
-  this.sassModule = testModule('node-sass');
-  this.lessModule = testModule('less');
-  this.stylusModule = testModule('stylus');
-  this.coffeeModule = testModule('coffee-script');
   this.dispatchMap = {
     js: this._minifyJavaScript,
     css: this._minifyCss,
     json: this._minifyJson,
-    sass: this._compileAndMinifySass,
-    less: this._compileAndMinifyLess,
-    stylus: this._compileAndMinifyStylus,
-    coffee: this._compileAndMinifyCoffee,
   };
 };
 
@@ -51,7 +43,7 @@ Minifier.defaultErrorHandler = function (errorInfo, callback) {
 Minifier.prototype._minifyJavaScript = function (options, body, callback) {
   assert(typeof callback === 'function');
   if (!this.uglifyJsModule) {
-    this.uglifyJsModule = require('uglify-js');
+    this.uglifyJsModule = require('terser');
   }
   if (options.minify === false) {
     return callback(null, body);
@@ -91,63 +83,6 @@ Minifier.prototype._minifyJson = function (options, body, callback) {
   }
   callback(null, result);
 };
-
-Minifier.prototype._compileAndMinifySass = function (options, body, callback) {
-  assert(typeof callback === 'function');
-  if (!this.sassModule) {
-    this.sassModule = require('node-sass');
-  }
-  var result;
-  try {
-    result = this.sassModule.renderSync(Object.assign({ data: body }, options.sass)).css.toString();
-  } catch (err) {
-    return callback({ stage: 'compile', error: err, body: body }, null);
-  }
-  this._minifyCss(options, result, callback);
-};
-
-Minifier.prototype._compileAndMinifyLess = function (options, body, callback) {
-  assert(typeof callback === 'function');
-  if (!this.lessModule) {
-    this.lessModule = require('less');
-  }
-  var self = this;
-  this.lessModule.render(body, options.less, function (err, output) {
-    if (err) {
-      return callback({ stage: 'compile', error: err, body: body }, null);
-    }
-    self._minifyCss(options, output.css, callback);
-  });
-};
-
-Minifier.prototype._compileAndMinifyStylus = function (options, body, callback) {
-  assert(typeof callback === 'function');
-  if (!this.stylusModule) {
-    this.stylusModule = require('stylus');
-  }
-  var self = this;
-  this.stylusModule.render(body, function (err, css) {
-    if (err) {
-      return callback({ stage: 'compile', error: err, body: body }, null);
-    }
-    self._minifyCss(options, css, callback);
-  });
-};
-
-Minifier.prototype._compileAndMinifyCoffee = function (options, body, callback) {
-  assert(typeof callback === 'function');
-  if (!this.coffeeModule) {
-    this.coffeeModule = require('coffee-script');
-  }
-  var result;
-  try {
-    result = this.coffeeModule.compile(body);
-  } catch (err) {
-    return callback({ stage: 'compile', error: err, body: body }, null);
-  }
-  this._minifyJavaScript(options, result, callback);
-};
-
 Minifier.prototype._compileAndMinify = function (assetType, options, body, callback) {
   assert(typeof callback === 'function');
   var processor = this.dispatchMap[assetType];

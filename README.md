@@ -60,7 +60,7 @@ app.use(minify({
 
 - `uglifyJsModule`: `Object`
 
-  Customize [UglifyJS](https://github.com/mishoo/UglifyJS2) (>= 3) module. If not specified, it will be `require('uglify-js')`. Example: [Use Uglify-ES](#use-uglify-es).
+  Customize [UglifyJS](https://github.com/mishoo/UglifyJS2) (>= 3) module. If not specified, it will be `require('terser')`. Example: [Use Uglify-ES](#use-uglify-es).
 
 - `errorHandler`: `Function(errorInfo, callback)`
 
@@ -337,7 +337,7 @@ app.get('/server_time.jsonp', function(req, res)
 1.0.0
 
 - Replace cssmin with [clean-css](https://github.com/jakubpawlowicz/clean-css)
-- Upgrade to use Uglify-JS 3 API
+- Upgrade to use terser 3 API
 - Support options for CSS minifying
 - Support options for SASS and LESS compiling
 - Refine naming conversion
